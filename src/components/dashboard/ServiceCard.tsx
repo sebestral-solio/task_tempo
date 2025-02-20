@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Tooltip,
@@ -9,15 +8,9 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Phone, Calendar, MapPin } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import StatusUpdateDialog from "./StatusUpdateDialog";
 
-type StatusType = "pending" | "in_progress" | "completed" | "cancelled";
+export type StatusType = "pending" | "in_progress" | "completed" | "cancelled";
 
 interface ServiceCardProps {
   id?: number;
@@ -39,28 +32,6 @@ interface ServiceCardProps {
   onStatusChange?: (newStatus: StatusType) => void;
   duplicate_flag?: string;
 }
-
-const getStatusColor = (status: StatusType) => {
-  switch (status) {
-    case "in_progress":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-    case "pending":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-    case "completed":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-    case "cancelled":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
-  }
-};
-
-const statusOptions: { value: StatusType; label: string }[] = [
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "In Progress" },
-  { value: "completed", label: "Completed" },
-  { value: "cancelled", label: "Cancelled" },
-];
 
 const ServiceCard = ({
   id = 1,
@@ -105,23 +76,9 @@ const ServiceCard = ({
             {service_type} - {sub_service}
           </p>
         </div>
-        <Select
-          value={status}
-          onValueChange={(value: StatusType) => onStatusChange(value)}
-        >
-          <SelectTrigger
-            className={`ml-auto w-[130px] ${getStatusColor(status)}`}
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="ml-auto">
+          <StatusUpdateDialog status={status} onStatusChange={onStatusChange} />
+        </div>
       </CardHeader>
       <CardContent className="p-6 pt-0">
         <div className="grid grid-cols-2 gap-4">
