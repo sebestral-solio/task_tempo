@@ -33,6 +33,40 @@ interface ServiceCardProps {
   duplicate_flag?: string;
 }
 
+const getServiceTypeColor = (serviceType: string) => {
+  switch (serviceType.toLowerCase()) {
+    case "home care":
+      return "bg-blue-500 text-white";
+    case "physical therapy":
+      return "bg-emerald-500 text-white";
+    case "nursing":
+      return "bg-purple-500 text-white";
+    case "mental health":
+      return "bg-rose-500 text-white";
+    default:
+      return "bg-slate-500 text-white";
+  }
+};
+
+const getSubServiceColor = (subService: string) => {
+  return "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-100";
+};
+
+const getStatusColor = (status: StatusType) => {
+  switch (status) {
+    case "in_progress":
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    case "completed":
+      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+    case "cancelled":
+      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300";
+  }
+};
+
 const ServiceCard = ({
   id = 1,
   service_type = "Home Care",
@@ -72,9 +106,6 @@ const ServiceCard = ({
           <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
             {full_name}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {service_type} - {sub_service}
-          </p>
         </div>
         <div className="ml-auto">
           <StatusUpdateDialog status={status} onStatusChange={onStatusChange} />
@@ -83,6 +114,18 @@ const ServiceCard = ({
       <CardContent className="p-6 pt-0">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-4">
+            <div className="flex gap-2 mb-4">
+              <span
+                className={`px-2.5 py-1 text-xs font-medium rounded-md ${getServiceTypeColor(service_type)}`}
+              >
+                {service_type}
+              </span>
+              <span
+                className={`px-2.5 py-1 text-xs font-medium rounded-md ${getSubServiceColor(sub_service)}`}
+              >
+                {sub_service}
+              </span>
+            </div>
             <TooltipProvider>
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                 <Tooltip>
