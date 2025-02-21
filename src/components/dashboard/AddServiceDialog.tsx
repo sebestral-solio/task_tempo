@@ -1,5 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
+import {
+  serviceConfig,
+  getSubServices,
+  getRequiredFields,
+  type ServiceType,
+  type SubService,
+} from "@/lib/service-config";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +18,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Form,
   FormControl,
   FormField,
@@ -21,18 +35,18 @@ import {
 import { Plus } from "lucide-react";
 
 interface AddServiceFormData {
-  service_type: string;
+  service_type: ServiceType;
   full_name: string;
   contact: string;
-  sub_service: string;
+  sub_service: SubService;
   preferred_date_time: string;
-  address: string;
-  payment_amount: string;
-  service_provider: string;
-  location: string;
-  emergency_contact: string;
-  special_requests: string;
-  additional_details: string;
+  address?: string;
+  payment_amount?: string;
+  service_provider?: string;
+  location?: string;
+  emergency_contact?: string;
+  special_requests?: string;
+  additional_details?: string;
 }
 
 interface AddServiceDialogProps {
@@ -42,6 +56,28 @@ interface AddServiceDialogProps {
 const AddServiceDialog = ({ onSubmit }: AddServiceDialogProps) => {
   const [open, setOpen] = React.useState(false);
   const form = useForm<AddServiceFormData>();
+  const [subServices, setSubServices] = React.useState<
+    (typeof serviceConfig.services)[number]["sub_services"]
+  >([]);
+  const [requiredFields, setRequiredFields] = React.useState<string[]>([]);
+
+  const watchServiceType = form.watch("service_type");
+  const watchSubService = form.watch("sub_service");
+
+  useEffect(() => {
+    if (watchServiceType) {
+      const subs = getSubServices(watchServiceType);
+      setSubServices(subs);
+      form.setValue("sub_service", undefined);
+    }
+  }, [watchServiceType, form]);
+
+  useEffect(() => {
+    if (watchServiceType && watchSubService) {
+      const fields = getRequiredFields(watchServiceType, watchSubService);
+      setRequiredFields(fields);
+    }
+  }, [watchServiceType, watchSubService]);
 
   const handleSubmit = (data: AddServiceFormData) => {
     onSubmit(data);
@@ -72,9 +108,18 @@ const AddServiceDialog = ({ onSubmit }: AddServiceDialogProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Service Type</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Home Care" {...field} />
-                    </FormControl>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a service type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {serviceConfig.services.map((service) => (
+                          <SelectItem key={service.name} value={service.name}>
+                            {service.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -86,9 +131,22 @@ const AddServiceDialog = ({ onSubmit }: AddServiceDialogProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Sub Service</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Regular Care" {...field} />
-                    </FormControl>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={!watchServiceType}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a sub service" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {subServices.map((sub) => (
+                          <SelectItem key={sub.name} value={sub.name}>
+                            {sub.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -108,33 +166,42 @@ const AddServiceDialog = ({ onSubmit }: AddServiceDialogProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="contact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Contact</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (555) 123-4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {requiredFields.includes("Contact Number") && (
+                <FormField
+                  control={form.control}
+                  name="contact"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="+1 (555) 123-4567"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
-              <FormField
-                control={form.control}
-                name="emergency_contact"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Emergency Contact</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+1 (555) 999-8888" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {requiredFields.includes("Emergency Contact") && (
+                <FormField
+                  control={form.control}
+                  name="emergency_contact"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Emergency Contact</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+1 (555) 999-8888" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -150,101 +217,113 @@ const AddServiceDialog = ({ onSubmit }: AddServiceDialogProps) => {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="payment_amount"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Amount</FormLabel>
-                    <FormControl>
-                      <Input type="number" placeholder="150.00" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {requiredFields.includes("Payment Amount") && (
+                <FormField
+                  control={form.control}
+                  name="payment_amount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Payment Amount</FormLabel>
+                      <FormControl>
+                        <Input type="number" placeholder="150.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
-              <FormField
-                control={form.control}
-                name="service_provider"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Service Provider</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Care Agency Inc" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {requiredFields.includes("Service Provider Details") && (
+                <FormField
+                  control={form.control}
+                  name="service_provider"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Provider</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Care Agency Inc" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="123 Main St, San Francisco, CA"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {requiredFields.includes("Address") && (
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123 Main St, San Francisco, CA"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="San Francisco, CA" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {requiredFields.includes("Location") && (
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="San Francisco, CA" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <FormField
-              control={form.control}
-              name="special_requests"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Special Requests</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter any special requests"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {requiredFields.includes("Special Requests") && (
+              <FormField
+                control={form.control}
+                name="special_requests"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Special Requests</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter any special requests"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-            <FormField
-              control={form.control}
-              name="additional_details"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Additional Details</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="Enter additional details"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {requiredFields.includes("Additional Requirements") && (
+              <FormField
+                control={form.control}
+                name="additional_details"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Additional Details</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Enter additional details"
+                        className="resize-none"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <Button type="submit" className="w-full">
               Add Service

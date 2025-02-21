@@ -104,7 +104,7 @@ const ServiceCard = ({
         </Avatar>
         <div className="flex flex-col">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">
-            {full_name}
+            {full_name || "Not specified"}
           </h3>
         </div>
         <div className="ml-auto">
@@ -134,17 +134,7 @@ const ServiceCard = ({
                   </TooltipTrigger>
                   <TooltipContent>Contact</TooltipContent>
                 </Tooltip>
-                <span className="text-sm">{contact}</span>
-              </div>
-
-              <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Phone className="h-4 w-4" />
-                  </TooltipTrigger>
-                  <TooltipContent>Emergency Contact</TooltipContent>
-                </Tooltip>
-                <span className="text-sm">{emergency_contact}</span>
+                <span className="text-sm">{contact || "Not specified"}</span>
               </div>
 
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
@@ -154,7 +144,7 @@ const ServiceCard = ({
                   </TooltipTrigger>
                   <TooltipContent>Address</TooltipContent>
                 </Tooltip>
-                <span className="text-sm">{address}</span>
+                <span className="text-sm">{address || "Not specified"}</span>
               </div>
 
               <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
@@ -162,35 +152,66 @@ const ServiceCard = ({
                   <TooltipTrigger>
                     <Calendar className="h-4 w-4" />
                   </TooltipTrigger>
-                  <TooltipContent>Preferred Date & Time</TooltipContent>
+                  <TooltipContent>Request Time</TooltipContent>
                 </Tooltip>
                 <span className="text-sm">
-                  {new Date(preferred_date_time).toLocaleString()}
+                  {created_at
+                    ? new Date(created_at).toLocaleString()
+                    : "Not specified"}
                 </span>
               </div>
+
+              {emergency_contact && (
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Phone className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent>Emergency Contact</TooltipContent>
+                  </Tooltip>
+                  <span className="text-sm">{emergency_contact}</span>
+                </div>
+              )}
             </TooltipProvider>
           </div>
 
           <div className="space-y-4">
             <div className="text-sm">
-              <span className="font-semibold">Payment:</span> ${payment_amount}
+              <span className="font-semibold">Preferred Date:</span>{" "}
+              {preferred_date_time
+                ? new Date(preferred_date_time).toLocaleDateString()
+                : "Not specified"}
             </div>
             <div className="text-sm">
-              <span className="font-semibold">Provider:</span>{" "}
-              {service_provider}
+              <span className="font-semibold">Preferred Time:</span>{" "}
+              {preferred_date_time
+                ? new Date(preferred_date_time).toLocaleTimeString()
+                : "Not specified"}
             </div>
-            <div className="text-sm">
-              <span className="font-semibold">Special Requests:</span>{" "}
-              {special_requests}
-            </div>
-            <div className="text-sm">
-              <span className="font-semibold">Additional Details:</span>{" "}
-              {additional_details}
-            </div>
-            <div className="text-sm">
-              <span className="font-semibold">Created:</span>{" "}
-              {new Date(created_at).toLocaleString()}
-            </div>
+            {payment_amount && (
+              <div className="text-sm">
+                <span className="font-semibold">Payment:</span> $
+                {payment_amount}
+              </div>
+            )}
+            {service_provider && (
+              <div className="text-sm">
+                <span className="font-semibold">Provider:</span>{" "}
+                {service_provider}
+              </div>
+            )}
+            {special_requests && (
+              <div className="text-sm">
+                <span className="font-semibold">Special Requests:</span>{" "}
+                {special_requests}
+              </div>
+            )}
+            {additional_details && (
+              <div className="text-sm">
+                <span className="font-semibold">Additional Details:</span>{" "}
+                {additional_details}
+              </div>
+            )}
             <div className="text-sm">
               <span className="font-semibold">ID:</span> {id}
             </div>
